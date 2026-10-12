@@ -3,147 +3,608 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Patient Intake Demo</title>
+  <title>New Patient Intake · Patient Intake Portal</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230b2545'/%3E%3Cpath d='M10 5h4v5h5v4h-5v5h-4v-5H5v-4h5z' fill='%23fff'/%3E%3C/svg%3E">
   <style>
-    :root { color-scheme: light dark; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #f4f5f7; color: #1d1f23; }
-    main { max-width: 620px; margin: 40px auto; padding: 28px; background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
-    h1 { font-size: 22px; margin: 0 0 6px; }
-    p.lead { margin: 0 0 22px; color: #5b616e; font-size: 14px; }
-    label { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 6px; }
-    input, textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; border: 1px solid #c9ced8; border-radius: 6px; }
-    textarea { min-height: 80px; resize: vertical; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .actions { display: flex; gap: 10px; margin-top: 22px; }
-    button { font: inherit; padding: 11px 18px; border-radius: 6px; border: 0; cursor: pointer; }
-    button.primary { background: #2563eb; color: #fff; flex: 1; }
-    button:disabled { opacity: .6; cursor: wait; }
-    button.secondary { background: #e7eaf0; color: #1d1f23; }
-    #message { margin-top: 16px; font-size: 14px; }
-    #message.error { color: #b42318; }
-    #message.ok { color: #067647; }
-    #message ul { margin: 0; padding-left: 20px; }
-    @media (max-width: 560px) { .row { grid-template-columns: 1fr; } main { margin: 16px; padding: 20px; } }
+    :root {
+      color-scheme: light;
+      --bg: #f2f5f8;
+      --surface: #ffffff;
+      --surface-2: #f7f9fb;
+      --border: #d6dde5;
+      --border-strong: #b6c2ce;
+      --text: #16212c;
+      --muted: #5a6a7a;
+      --navy: #0b2545;
+      --navy-2: #13315c;
+      --primary: #0d6aa8;
+      --primary-hover: #0a5689;
+      --primary-soft: #e6f0f8;
+      --danger: #b42318;
+      --danger-soft: #fdeceb;
+      --success: #0a7a4b;
+      --success-soft: #e5f5ec;
+      --warn: #7a5200;
+      --warn-soft: #fff5dc;
+      --warn-border: #f0d48a;
+      --radius: 8px;
+      --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .07);
+      --focus: 0 0 0 3px rgba(13, 106, 168, .25);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.5 "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* App bar */
+    .appbar {
+      background: var(--navy);
+      color: #fff;
+      border-bottom: 3px solid var(--primary);
+    }
+    .appbar-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 58px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; letter-spacing: .1px; }
+    .brand-mark {
+      width: 32px; height: 32px; border-radius: 7px;
+      background: #fff; display: grid; place-items: center;
+    }
+    .brand small { display: block; font-weight: 400; font-size: 12px; color: #b9c8db; line-height: 1.2; }
+    .env {
+      margin-left: auto;
+      font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(255, 255, 255, .12); color: #dbe7f3; border: 1px solid rgba(255, 255, 255, .2);
+    }
+
+    /* PHI notice */
+    .notice {
+      background: var(--warn-soft);
+      border-bottom: 1px solid var(--warn-border);
+      color: var(--warn);
+      font-size: 14px;
+    }
+    .notice-inner { max-width: 1200px; margin: 0 auto; padding: 10px 24px; display: flex; gap: 10px; align-items: flex-start; }
+    .notice svg { flex: none; margin-top: 2px; }
+
+    /* Page */
+    .page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    h1 { font-size: 24px; line-height: 1.25; margin: 0; color: var(--navy); }
+    .page-head p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+    .head-actions { display: flex; gap: 8px; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card + .card { margin-top: 16px; }
+    .card-head { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+    .card-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--navy); }
+    .card-head p { margin: 0; font-size: 13px; color: var(--muted); }
+    .step {
+      flex: none; width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: 13px;
+    }
+    .card-body { padding: 18px 20px 20px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px 16px; }
+
+    /* Fields */
+    .field { grid-column: span 6; display: flex; flex-direction: column; min-width: 0; }
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+    .span-4 { grid-column: span 4; }
+    label { font-size: 13px; font-weight: 600; color: #2b3b4b; margin-bottom: 6px; }
+    .req { color: var(--danger); margin-left: 2px; }
+    .opt { color: var(--muted); font-weight: 400; }
+    input, select, textarea {
+      width: 100%; font: inherit; color: var(--text);
+      background: #fff; border: 1px solid var(--border-strong); border-radius: 6px;
+      padding: 9px 11px; min-height: 40px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus); }
+    [aria-invalid="true"] { border-color: var(--danger); background: #fffafa; }
+    [aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgba(180, 35, 24, .2); }
+    .hint, .error { font-size: 12.5px; margin: 5px 0 0; }
+    .hint { color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+    .error { color: var(--danger); }
+    .error:empty { display: none; }
+
+    /* Buttons */
+    button { font: inherit; cursor: pointer; border-radius: 6px; min-height: 40px; padding: 8px 16px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, border-color .15s; }
+    button:focus-visible { outline: none; box-shadow: var(--focus); }
+    .btn-primary { background: var(--primary); color: #fff; border: 1px solid var(--primary); }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
+    .btn-secondary { background: #fff; color: var(--navy); border: 1px solid var(--border-strong); }
+    .btn-secondary:hover:not(:disabled) { background: var(--surface-2); border-color: #94a3b4; }
+    .btn-ghost { background: transparent; color: var(--primary); border: 1px solid transparent; }
+    .btn-ghost:hover:not(:disabled) { background: var(--primary-soft); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-block { width: 100%; }
+
+    /* Side panel */
+    .side { position: sticky; top: 24px; }
+    .side .card-body { display: block; }
+    .status {
+      margin-left: auto; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+      background: #eef1f4; color: var(--muted);
+    }
+    .status[data-state="busy"] { background: var(--primary-soft); color: var(--primary); }
+    .status[data-state="ready"] { background: var(--success-soft); color: var(--success); }
+    .status[data-state="stale"] { background: var(--warn-soft); color: var(--warn); }
+    .status[data-state="error"] { background: var(--danger-soft); color: var(--danger); }
+
+    .meta { margin: 0 0 16px; display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 13px; }
+    .meta dt { color: var(--muted); }
+    .meta dd { margin: 0; font-weight: 500; }
+
+    .preview-box {
+      border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2);
+      height: 420px; display: grid; place-items: center; overflow: hidden; margin-bottom: 14px;
+    }
+    .preview-box iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+    .placeholder { text-align: center; color: var(--muted); font-size: 13.5px; padding: 24px; max-width: 260px; }
+    .placeholder svg { display: block; margin: 0 auto 10px; }
+
+    .alert { border-radius: 6px; padding: 10px 12px; font-size: 13.5px; margin-bottom: 14px; }
+    .alert[hidden] { display: none; }
+    .alert-error { background: var(--danger-soft); color: var(--danger); border: 1px solid #f5c2bd; }
+    .alert-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-border); }
+    .alert ul { margin: 4px 0 0; padding-left: 18px; }
+
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .side-foot { border-top: 1px solid var(--border); padding: 12px 20px; font-size: 12.5px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+    .side-foot svg { flex: none; margin-top: 2px; }
+
+    .page-foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(255, 255, 255, .45); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { position: static; }
+    }
+    @media (max-width: 640px) {
+      .appbar-inner, .notice-inner, .page { padding-left: 16px; padding-right: 16px; }
+      .brand small { display: none; }
+      .span-2, .span-3, .span-4 { grid-column: span 6; }
+      .card-body { padding: 16px; }
+      .head-actions { width: 100%; }
+      .head-actions button { flex: 1; }
+      .preview-box { height: 360px; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Patient Intake Form</h1>
-    <p class="lead">Fill in the details and generate a formatted Word document. Demo only: use sample data.</p>
-
-    <form id="intake" novalidate>
-      <label for="patientName">Patient Name *</label>
-      <input id="patientName" name="patientName" autocomplete="name">
-
-      <div class="row">
-        <div>
-          <label for="dateOfBirth">Date of Birth *</label>
-          <input id="dateOfBirth" name="dateOfBirth" type="date">
-        </div>
-        <div>
-          <label for="phone">Phone Number *</label>
-          <input id="phone" name="phone" type="tel" autocomplete="tel">
-        </div>
+  <header class="appbar">
+    <div class="appbar-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3z" fill="#0d6aa8"/></svg>
+        </span>
+        <span>Patient Intake Portal<small>Clinical document automation</small></span>
       </div>
+      <span class="env">Demo environment</span>
+    </div>
+  </header>
 
-      <label for="address">Address *</label>
-      <input id="address" name="address" autocomplete="street-address">
+  <div class="notice" role="note">
+    <div class="notice-inner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2 21h20L12 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v5M12 18v.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span><strong>Test data only.</strong> This is a demonstration system. Do not enter real patient information (PHI).</span>
+    </div>
+  </div>
 
-      <label for="emergencyContact">Emergency Contact *</label>
-      <input id="emergencyContact" name="emergencyContact" placeholder="Name, relationship, phone">
-
-      <label for="insuranceProvider">Insurance Provider</label>
-      <input id="insuranceProvider" name="insuranceProvider">
-
-      <label for="reasonForVisit">Reason for Visit *</label>
-      <textarea id="reasonForVisit" name="reasonForVisit"></textarea>
-
-      <div class="actions">
-        <button type="button" class="secondary" id="fillSample">Fill sample data</button>
-        <button type="button" class="primary" data-format="docx">Download Word (.docx)</button>
-        <button type="button" class="primary" data-format="pdf">Download PDF</button>
+  <main class="page">
+    <div class="page-head">
+      <div>
+        <div class="crumbs">Registration &rsaquo; Intake</div>
+        <h1>New patient intake</h1>
+        <p>Complete the intake details. The system generates a formatted intake document in PDF and Word.</p>
       </div>
-      <div id="message" role="alert"></div>
-    </form>
+      <div class="head-actions">
+        <button type="button" class="btn-secondary" id="fillSample">Load test patient</button>
+        <button type="button" class="btn-ghost" id="clearForm">Clear form</button>
+      </div>
+    </div>
+
+    <div class="layout">
+      <form id="intake" novalidate>
+        <section class="card" aria-labelledby="s1">
+          <div class="card-head"><span class="step">1</span><div><h2 id="s1">Patient information</h2><p>Legal name and contact details</p></div></div>
+          <div class="card-body">
+            <div class="field span-3">
+              <label for="firstName">First name<span class="req">*</span></label>
+              <input id="firstName" name="firstName" autocomplete="off" maxlength="60" required>
+              <p class="error" id="firstName-error"></p>
+            </div>
+            <div class="field span-3">
+              <label for="lastName">Last name<span class="req">*</span></label>
+              <input id="lastName" name="lastName" autocomplete="off" maxlength="60" required>
+              <p class="error" id="lastName-error"></p>
+            </div>
+            <div class="field span-3">
+              <label for="dateOfBirth">Date of birth<span class="req">*</span></label>
+              <input id="dateOfBirth" name="dateOfBirth" type="date" required>
+              <p class="error" id="dateOfBirth-error"></p>
+            </div>
+            <div class="field span-3">
+              <label for="phone">Phone number<span class="req">*</span></label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(555) 555-0100" autocomplete="off" required>
+              <p class="error" id="phone-error"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="s2">
+          <div class="card-head"><span class="step">2</span><div><h2 id="s2">Home address</h2><p>Primary residence</p></div></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="street">Street address<span class="req">*</span></label>
+              <input id="street" name="street" maxlength="100" placeholder="Street, apartment or unit" autocomplete="off" required>
+              <p class="error" id="street-error"></p>
+            </div>
+            <div class="field span-2">
+              <label for="city">City<span class="req">*</span></label>
+              <input id="city" name="city" maxlength="50" autocomplete="off" required>
+              <p class="error" id="city-error"></p>
+            </div>
+            <div class="field span-2">
+              <label for="state">State<span class="req">*</span></label>
+              <select id="state" name="state" required><option value="">Select</option></select>
+              <p class="error" id="state-error"></p>
+            </div>
+            <div class="field span-2">
+              <label for="zip">ZIP<span class="req">*</span></label>
+              <input id="zip" name="zip" inputmode="numeric" maxlength="10" placeholder="00000" autocomplete="off" required>
+              <p class="error" id="zip-error"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="s3">
+          <div class="card-head"><span class="step">3</span><div><h2 id="s3">Emergency contact</h2><p>Person to contact if the patient cannot be reached</p></div></div>
+          <div class="card-body">
+            <div class="field span-3">
+              <label for="ecName">Full name<span class="req">*</span></label>
+              <input id="ecName" name="ecName" maxlength="80" autocomplete="off" required>
+              <p class="error" id="ecName-error"></p>
+            </div>
+            <div class="field span-3">
+              <label for="ecRelationship">Relationship <span class="opt">(optional)</span></label>
+              <select id="ecRelationship" name="ecRelationship">
+                <option value="">Select</option>
+                <option>Spouse</option><option>Partner</option><option>Parent</option><option>Child</option>
+                <option>Sibling</option><option>Guardian</option><option>Friend</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field span-3">
+              <label for="ecPhone">Phone number<span class="req">*</span></label>
+              <input id="ecPhone" name="ecPhone" type="tel" inputmode="tel" placeholder="(555) 555-0100" autocomplete="off" required>
+              <p class="error" id="ecPhone-error"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="s4">
+          <div class="card-head"><span class="step">4</span><div><h2 id="s4">Insurance</h2><p>Leave blank for self-pay patients</p></div></div>
+          <div class="card-body">
+            <div class="field span-4">
+              <label for="insurer">Insurance provider <span class="opt">(optional)</span></label>
+              <input id="insurer" name="insurer" maxlength="80" placeholder="e.g. Blue Cross Blue Shield" autocomplete="off">
+            </div>
+            <div class="field span-2">
+              <label for="memberId">Member ID <span class="opt">(optional)</span></label>
+              <input id="memberId" name="memberId" maxlength="30" autocomplete="off">
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="s5">
+          <div class="card-head"><span class="step">5</span><div><h2 id="s5">Visit details</h2><p>Chief complaint or reason for today's visit</p></div></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="reason">Reason for visit<span class="req">*</span></label>
+              <textarea id="reason" name="reason" maxlength="200" required></textarea>
+              <p class="hint"><span>Brief summary in the patient's words.</span><span id="reasonCount">0 / 200</span></p>
+              <p class="error" id="reason-error"></p>
+            </div>
+          </div>
+        </section>
+      </form>
+
+      <aside class="side" aria-label="Generated document">
+        <section class="card">
+          <div class="card-head">
+            <h2>Intake document</h2>
+            <span class="status" id="status" data-state="idle" role="status">Not generated</span>
+          </div>
+          <div class="card-body">
+            <dl class="meta">
+              <dt>Template</dt><dd>Patient Intake Form · v1</dd>
+              <dt>Formats</dt><dd>PDF, Word (.docx)</dd>
+            </dl>
+
+            <div class="preview-box" id="previewBox">
+              <div class="placeholder" id="placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z" stroke="#8a9aab" stroke-width="1.5" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 17h4" stroke="#8a9aab" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Complete the form and select <strong>Generate document</strong> to preview it here.
+              </div>
+            </div>
+
+            <div class="alert alert-error" id="errorBox" role="alert" hidden></div>
+            <div class="alert alert-warn" id="staleBox" hidden>Details changed after this preview was generated. Generate again to update it.</div>
+
+            <button type="button" class="btn-primary btn-block" id="generateBtn">Generate document</button>
+            <div class="btn-row">
+              <button type="button" class="btn-secondary" id="dlPdf" disabled>Download PDF</button>
+              <button type="button" class="btn-secondary" id="dlDocx" disabled>Download Word</button>
+            </div>
+          </div>
+          <div class="side-foot">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg>
+            <span>Documents are generated on request and are not stored on the server.</span>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <footer class="page-foot">Patient Intake Portal · Demonstration build. Not for clinical use.</footer>
   </main>
 
   <script>
     const form = document.getElementById('intake');
-    const message = document.getElementById('message');
-    const submitBtn = document.getElementById('submitBtn');
+    const statusEl = document.getElementById('status');
+    const errorBox = document.getElementById('errorBox');
+    const staleBox = document.getElementById('staleBox');
+    const previewBox = document.getElementById('previewBox');
+    const placeholder = document.getElementById('placeholder');
+    const generateBtn = document.getElementById('generateBtn');
+    const dlPdf = document.getElementById('dlPdf');
+    const dlDocx = document.getElementById('dlDocx');
+    const reasonCount = document.getElementById('reasonCount');
+
+    const STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','DC','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
+    const stateSelect = document.getElementById('state');
+    for (const code of STATES) stateSelect.add(new Option(code, code));
 
     const SAMPLE = {
-      patientName: 'Jane Example',
-      dateOfBirth: '1988-04-17',
-      address: '123 Sample Street, Springfield, IL 62701',
-      phone: '+1 (555) 010-2030',
-      emergencyContact: 'John Example (spouse), +1 (555) 010-2031',
-      insuranceProvider: 'Demo Health Plan',
-      reasonForVisit: 'Annual check-up and blood pressure review.',
+      firstName: 'Jane', lastName: 'Example', dateOfBirth: '1988-04-17', phone: '(555) 010-2030',
+      street: '123 Sample Street, Apt 4B', city: 'Springfield', state: 'IL', zip: '62701',
+      ecName: 'John Example', ecRelationship: 'Spouse', ecPhone: '(555) 010-2031',
+      insurer: 'Demo Health Plan', memberId: 'DHP-0042817',
+      reason: 'Annual physical and follow-up on blood pressure readings from last visit.',
     };
 
-    function showMessage(type, content) {
-      message.className = type;
-      message.innerHTML = content;
+    // Client-side checks mirror the server's rules so staff see problems next to the field.
+    const RULES = {
+      firstName: v => !v && 'Enter the first name.',
+      lastName: v => !v && 'Enter the last name.',
+      dateOfBirth: v => {
+        if (!v) return 'Enter the date of birth.';
+        const d = new Date(v + 'T00:00:00');
+        if (isNaN(d) || d > new Date()) return 'Date of birth cannot be in the future.';
+        if (d.getFullYear() < 1900) return 'Check the year of birth.';
+      },
+      phone: v => !v ? 'Enter a phone number.' : digits(v).length !== 10 && 'Enter a 10-digit US phone number.',
+      street: v => !v && 'Enter the street address.',
+      city: v => !v && 'Enter the city.',
+      state: v => !v && 'Select a state.',
+      zip: v => !v ? 'Enter the ZIP code.' : !/^\d{5}(-\d{4})?$/.test(v) && 'Use 5 digits or ZIP+4.',
+      ecName: v => !v && 'Enter the emergency contact name.',
+      ecPhone: v => !v ? 'Enter a phone number.' : digits(v).length !== 10 && 'Enter a 10-digit US phone number.',
+      reason: v => !v && 'Enter the reason for the visit.',
+    };
+
+    let state = 'idle';
+    let lastPayload = null;
+    let lastPdf = null;
+    let previewUrl = null;
+
+    function digits(v) { return v.replace(/\D/g, ''); }
+    function val(name) { return form.elements[name].value.trim(); }
+
+    function formatPhone(v) {
+      const d = digits(v).slice(0, 10);
+      if (d.length < 4) return d;
+      if (d.length < 7) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+      return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
     }
 
-    function showErrors(errors) {
-      showMessage('error', '<ul>' + errors.map(e => '<li>' + e + '</li>').join('') + '</ul>');
+    function setStatus(next, label) {
+      state = next;
+      statusEl.dataset.state = next;
+      statusEl.textContent = label;
     }
 
-    document.getElementById('fillSample').addEventListener('click', () => {
-      for (const [key, value] of Object.entries(SAMPLE)) {
-        form.elements[key].value = value;
+    function setFieldError(name, message) {
+      const input = form.elements[name];
+      const slot = document.getElementById(name + '-error');
+      input.setAttribute('aria-invalid', message ? 'true' : 'false');
+      if (message) input.setAttribute('aria-describedby', name + '-error');
+      else input.removeAttribute('aria-describedby');
+      if (slot) slot.textContent = message || '';
+    }
+
+    function validateForm() {
+      let first = null;
+      for (const [name, rule] of Object.entries(RULES)) {
+        const message = rule(val(name)) || '';
+        setFieldError(name, message);
+        if (message && !first) first = form.elements[name];
       }
-      showMessage('', '');
-    });
+      return first;
+    }
 
-    async function generate(format, button) {
-      showMessage('', '');
-      const label = button.textContent;
-      const buttons = document.querySelectorAll('button[data-format]');
-      buttons.forEach(b => b.disabled = true);
-      button.textContent = 'Generating...';
+    // Maps the detailed form onto the document template's fields.
+    function buildPayload() {
+      const relationship = val('ecRelationship');
+      const insurer = val('insurer');
+      const memberId = val('memberId');
+      return {
+        patientName: `${val('firstName')} ${val('lastName')}`,
+        dateOfBirth: val('dateOfBirth'),
+        phone: formatPhone(val('phone')),
+        address: `${val('street')}, ${val('city')}, ${val('state')} ${val('zip')}`,
+        emergencyContact: `${val('ecName')}${relationship ? ` (${relationship})` : ''}, ${formatPhone(val('ecPhone'))}`,
+        insuranceProvider: insurer ? (memberId ? `${insurer} (Member ID: ${memberId})` : insurer) : '',
+        reasonForVisit: val('reason'),
+      };
+    }
+
+    function showError(messages) {
+      errorBox.replaceChildren();
+      if (!messages) { errorBox.hidden = true; return; }
+      const list = document.createElement('ul');
+      for (const m of messages) {
+        const li = document.createElement('li');
+        li.textContent = m;
+        list.append(li);
+      }
+      const title = document.createElement('strong');
+      title.textContent = 'The document could not be generated.';
+      errorBox.append(title, list);
+      errorBox.hidden = false;
+    }
+
+    async function requestFile(format, payload) {
+      const res = await fetch('/api/generate/' + format, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body.errors || ['Unexpected server error.']).join('\n'));
+      }
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const name = (disposition.match(/filename="(.+?)"/) || [])[1] || 'patient-intake.' + format;
+      return { blob: await res.blob(), name };
+    }
+
+    function saveFile({ blob, name }) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function clearPreview() {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+      lastPdf = null;
+      lastPayload = null;
+      previewBox.replaceChildren(placeholder);
+      dlPdf.disabled = true;
+      dlDocx.disabled = true;
+      staleBox.hidden = true;
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      showError(null);
+      const firstInvalid = validateForm();
+      if (firstInvalid) {
+        showError(['Some required details are missing or invalid. Check the highlighted fields.']);
+        setStatus('error', 'Needs attention');
+        firstInvalid.focus();
+        return;
+      }
+
+      const payload = buildPayload();
+      generateBtn.disabled = true;
+      generateBtn.innerHTML = '<span class="spinner" aria-hidden="true"></span>Generating…';
+      setStatus('busy', 'Generating…');
 
       try {
-        const payload = Object.fromEntries(new FormData(form).entries());
-        const res = await fetch('/api/generate/' + format, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          showErrors(body.errors || ['Something went wrong. Please try again.']);
-          return;
-        }
-
-        const disposition = res.headers.get('Content-Disposition') || '';
-        const fileName = (disposition.match(/filename="(.+?)"/) || [])[1] || 'patient-intake.' + format;
-        const url = URL.createObjectURL(await res.blob());
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-
-        showMessage('ok', 'Done. ' + fileName + ' should start downloading.');
+        const pdf = await requestFile('pdf', payload);
+        clearPreview();
+        lastPayload = payload;
+        lastPdf = pdf;
+        previewUrl = URL.createObjectURL(pdf.blob);
+        const frame = document.createElement('iframe');
+        frame.title = 'Preview of the generated intake document';
+        frame.src = previewUrl + '#view=FitH';
+        previewBox.replaceChildren(frame);
+        dlPdf.disabled = false;
+        dlDocx.disabled = false;
+        setStatus('ready', 'Ready');
       } catch (err) {
-        showErrors(['Network error. Is the server running?']);
+        showError(err.message.split('\n'));
+        setStatus('error', 'Failed');
       } finally {
-        buttons.forEach(b => b.disabled = false);
-        button.textContent = label;
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate document';
       }
-    }
+    });
 
-    document.querySelectorAll('button[data-format]').forEach(button => {
-      button.addEventListener('click', () => {
-        if (!form.reportValidity()) return;
-        generate(button.dataset.format, button);
-      });
+    dlPdf.addEventListener('click', () => lastPdf && saveFile(lastPdf));
+
+    // Word is built from the same data as the preview, so both files always match.
+    dlDocx.addEventListener('click', async () => {
+      if (!lastPayload) return;
+      dlDocx.disabled = true;
+      dlDocx.textContent = 'Preparing…';
+      try {
+        saveFile(await requestFile('docx', lastPayload));
+      } catch (err) {
+        showError(err.message.split('\n'));
+      } finally {
+        dlDocx.disabled = false;
+        dlDocx.textContent = 'Download Word';
+      }
+    });
+
+    form.addEventListener('input', (event) => {
+      const el = event.target;
+      if (el.type === 'tel') el.value = formatPhone(el.value);
+      if (el.getAttribute('aria-invalid') === 'true' && RULES[el.name] && !RULES[el.name](el.value.trim())) {
+        setFieldError(el.name, '');
+      }
+      if (el.name === 'reason') reasonCount.textContent = `${el.value.length} / 200`;
+      if (state === 'ready') {
+        staleBox.hidden = false;
+        setStatus('stale', 'Out of date');
+      }
+    });
+
+    document.getElementById('fillSample').addEventListener('click', () => {
+      for (const [name, value] of Object.entries(SAMPLE)) {
+        form.elements[name].value = value;
+        setFieldError(name, '');
+      }
+      reasonCount.textContent = `${SAMPLE.reason.length} / 200`;
+      showError(null);
+      if (state === 'ready') { staleBox.hidden = false; setStatus('stale', 'Out of date'); }
+    });
+
+    document.getElementById('clearForm').addEventListener('click', () => {
+      form.reset();
+      for (const name of Object.keys(RULES)) setFieldError(name, '');
+      reasonCount.textContent = '0 / 200';
+      showError(null);
+      clearPreview();
+      setStatus('idle', 'Not generated');
     });
   </script>
 </body>
