@@ -5,13 +5,18 @@ const os = require('os');
 const { execFile } = require('child_process');
 const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
+const { renderPdf } = require('./pdf');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const TEMPLATE_PATH = path.join(__dirname, 'templates', 'patient-intake.docx');
+const CLINIC_NAME = 'Demo Clinic';
 
-// LibreOffice is used to convert the generated DOCX to PDF.
-// Set SOFFICE_PATH if it is not in the default location.
+// PDF engine: 'native' (default, pure JS, works on Vercel/serverless) or
+// 'libreoffice' (converts the filled DOCX; needs LibreOffice installed on the host).
+const PDF_ENGINE = process.env.PDF_ENGINE || 'native';
+
+// Only used when PDF_ENGINE=libreoffice. Set SOFFICE_PATH if it is not in the default location.
 const SOFFICE_PATH = process.env.SOFFICE_PATH ||
   (process.platform === 'win32'
     ? 'C:\\Program Files\\LibreOffice\\program\\soffice.exe'
@@ -59,6 +64,10 @@ function validate(input) {
   if (data.phone !== 'Not provided' && !/^[+\d\s()-]{7,20}$/.test(data.phone)) {
     errors.push('Phone Number looks invalid.');
   }
+
+  // Documents use the US date format (MM/DD/YYYY).
+  const dob = data.dateOfBirth.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dob) data.dateOfBirth = `${dob[2]}/${dob[3]}/${dob[1]}`;
 
   return { errors, data };
 }
@@ -116,8 +125,15 @@ app.post('/api/generate/:format', async (req, res) => {
   if (errors.length) return res.status(400).json({ errors });
 
   try {
-    const docxBuffer = renderDocx(data);
-    const output = req.params.format === 'pdf' ? await docxToPdf(docxBuffer) : docxBuffer;
+    let output;
+    if (req.params.format === 'docx') {
+      output = renderDocx(data);
+    } else if (PDF_ENGINE === 'libreoffice') {
+      output = await docxToPdf(renderDocx(data));
+    } else {
+      const rows = FIELDS.map((field) => [field.label, data[field.key]]);
+      output = await renderPdf(rows, { clinic: CLINIC_NAME, generatedOn: todayLabel() });
+    }
     const fileName = `intake-${fileSafe(data.patientName)}.${format.ext}`;
 
     res.set({

@@ -5,7 +5,11 @@ Functional demo: fill in a web form, then download the Patient Intake as a Word 
 ## Requirements
 
 - Node.js 18+
-- LibreOffice (for PDF output). Default path on Windows: `C:\Program Files\LibreOffice\program\soffice.exe`. Set `SOFFICE_PATH` to use a different one.
+
+## PDF engine
+
+- **Default (`native`)**: PDFs are drawn in Node with pdf-lib (`pdf.js`). No extra software, so it works on Vercel and other serverless hosts.
+- **`PDF_ENGINE=libreoffice`**: converts the filled Word file to PDF with LibreOffice instead, so the PDF matches the .docx exactly. LibreOffice must be installed on the host (for example, an Azure container). Default path on Windows: `C:\Program Files\LibreOffice\program\soffice.exe`. Set `SOFFICE_PATH` to use a different one.
 
 ## Run it
 
@@ -19,7 +23,7 @@ npm start          # http://localhost:3000
 
 1. `scripts/create-template.js` builds a Word template with placeholders such as `{patientName}`.
 2. `public/index.html` is the form. It posts JSON to `/api/generate/docx` or `/api/generate/pdf`.
-3. `server.js` validates the input, fills the template with docxtemplater, and returns the file. PDF is made by converting the filled DOCX with LibreOffice headless.
+3. `server.js` validates the input, fills the Word template with docxtemplater, and returns the file. PDFs come from the engine above.
 
 ## API
 
